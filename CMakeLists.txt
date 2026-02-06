@@ -7,7 +7,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 find_package(LLVM REQUIRED CONFIG)
 find_package(MLIR REQUIRED CONFIG)
 
-add_executable(haetae src/haetae.cpp)
+set(SOURCES
+    src/main.cpp
+)
+
+add_executable(haetae ${SOURCES})
 
 target_include_directories(haetae PRIVATE ${LLLVM_INCLUDE_DIRS} ${MLIR_INCLUDE_DIRS})
 target_compile_definitions(haetae PRIVATE ${LLVM_DEFINITIONS})
