@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include "lexer/lexer.hpp"
+
 using namespace std;
 
 int main(int argc, char *argv[]) {
@@ -21,6 +23,9 @@ int main(int argc, char *argv[]) {
         cout << "error: cannot open input file\n";
         return -1;
     }
+
+    Lexer lexer(std::move(input_file));
+    vector<Token> tokens = lexer.get_tokens();
 
     return 0;
 }
