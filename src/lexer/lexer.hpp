@@ -8,7 +8,7 @@
 
 class Lexer {
 public:
-    Lexer(std::ifstream file);
+    Lexer(std::ifstream file) : source(load_file(std::move(file))) {}
 
     std::vector<Token> get_tokens();
 

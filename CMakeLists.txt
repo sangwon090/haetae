@@ -10,6 +10,7 @@ find_package(MLIR REQUIRED CONFIG)
 set(SOURCES
     src/main.cpp
     src/lexer/lexer.cpp
+    src/parser/parser.cpp
 )
 
 add_executable(haetae ${SOURCES})

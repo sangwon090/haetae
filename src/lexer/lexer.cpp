@@ -5,10 +5,6 @@
 #include <iostream>
 #include <cctype>
 
-Lexer::Lexer(std::ifstream file) {
-    source = load_file(std::move(file));
-}
-
 std::string Lexer::load_file(std::ifstream file) {
     std::string content;
 

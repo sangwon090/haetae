@@ -3,6 +3,7 @@
 #include <fstream>
 
 #include "lexer/lexer.hpp"
+#include "parser/parser.hpp"
 
 using namespace std;
 
@@ -26,6 +27,9 @@ int main(int argc, char *argv[]) {
 
     Lexer lexer(std::move(input_file));
     vector<Token> tokens = lexer.get_tokens();
+
+    Parser parser(std::move(tokens));
+    AST ast = parser.get_ast();
 
     return 0;
 }
