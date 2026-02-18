@@ -358,8 +358,13 @@ std::vector<Token> Lexer::get_tokens() {
                 break;
 
             default:
-                tokens.push_back(read_ident());
-                break;
+                if((ispunct(ch) && ch != '_') || ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v' ) {
+                    std::cerr << "[Lexer] unexpected character `" << ch << "` found. ignoring.";
+                    offset += 1;
+                } else {
+                    tokens.push_back(read_ident());
+                    break;
+                }
         }
     }
 
