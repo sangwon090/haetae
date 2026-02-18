@@ -16,7 +16,13 @@ set(SOURCES
 
 add_library(haetae_lib ${SOURCES})
 
-target_include_directories(haetae_lib PRIVATE ${LLLVM_INCLUDE_DIRS} ${MLIR_INCLUDE_DIRS})
+target_include_directories(haetae_lib
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
+        ${LLVM_INCLUDE_DIRS}
+        ${MLIR_INCLUDE_DIRS}
+)
 target_compile_definitions(haetae_lib PRIVATE ${LLVM_DEFINITIONS})
 
 target_link_libraries(haetae_lib PRIVATE
@@ -25,11 +31,16 @@ target_link_libraries(haetae_lib PRIVATE
     MLIRParser
 )
 
-
+if(NOT LLVM_ENABLE_RTTI)
+    target_compile_options(haetae_lib PRIVATE -fno-rtti)
+endif()
 
 add_executable(haetae src/main.cpp)
 target_link_libraries(haetae PRIVATE haetae_lib)
 
+
+
+# Fuzzer
 option(ENABLE_FUZZING "Build fuzz targets" OFF)
 
 if(ENABLE_FUZZING)

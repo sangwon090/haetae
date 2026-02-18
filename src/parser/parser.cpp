@@ -1,6 +1,6 @@
-#include "parser.hpp"
-#include "expr.hpp"
-#include "../utils/overloaded.hpp"
+#include <haetae/parser/parser.hpp>
+#include <haetae/parser/expr.hpp>
+#include <haetae/utils/overloaded.hpp>
 
 #include <stdexcept>
 #include <variant>

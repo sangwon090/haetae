@@ -1,5 +1,5 @@
-#include "lexer.hpp"
-#include "token.hpp"
+#include <haetae/lexer/lexer.hpp>
+#include <haetae/lexer/token.hpp>
 
 #include <string>
 #include <sstream>

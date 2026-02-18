@@ -3,8 +3,8 @@
 #include <fstream>
 #include <stdexcept>
 
-#include "lexer/lexer.hpp"
-#include "parser/parser.hpp"
+#include <haetae/lexer/lexer.hpp>
+#include <haetae/parser/parser.hpp>
 
 using namespace std;
 

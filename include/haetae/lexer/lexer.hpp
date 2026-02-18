@@ -1,6 +1,6 @@
 #pragma once
 
-#include "token.hpp"
+#include "haetae/lexer/token.hpp"
 
 #include <fstream>
 #include <vector>

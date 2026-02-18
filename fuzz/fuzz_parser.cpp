@@ -3,8 +3,8 @@
 #include <string>
 #include <vector>
 
-#include "../src/lexer/lexer.hpp"
-#include "../src/parser/parser.hpp"
+#include <haetae/lexer/lexer.hpp>
+#include <haetae/parser/parser.hpp>
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     std::string input(reinterpret_cast<const char*>(data), size);

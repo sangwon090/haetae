@@ -1,4 +1,4 @@
-#include "expr.hpp"
+#include <haetae/parser/expr.hpp>
 
 Expr::Expr(ExprVariant v) : variant(std::move(v)) {}
 Expr::~Expr() = default;
