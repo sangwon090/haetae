@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <fstream>
+#include <stdexcept>
 
 #include "lexer/lexer.hpp"
 #include "parser/parser.hpp"
@@ -28,8 +29,16 @@ int main(int argc, char *argv[]) {
     Lexer lexer(std::move(input_file));
     vector<Token> tokens = lexer.get_tokens();
 
+    cout << "Tokens:\n";
+    for(auto token : tokens) cout << token << " ";
+    cout << "\n\n";
+
     Parser parser(std::move(tokens));
     auto opt_ast = parser.get_ast();
+    if(!opt_ast) throw std::runtime_error(opt_ast.error().toString());
+
+    cout << "AST:\n";
+    for(auto &expr : opt_ast->exprs) cout << expr << '\n';
     
     return 0;
 }
