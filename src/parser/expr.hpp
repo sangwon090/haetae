@@ -6,24 +6,51 @@
 
 #include <memory>
 #include <vector>
+#include <variant>
+#include <ostream>
 
 struct Expr;
-inline std::ostream& operator<<(std::ostream& os, const Expr& expr);
+
+std::ostream& operator<<(std::ostream& os, const Expr& expr);
 
 struct UnaryExpr {
     Operator op;
     std::unique_ptr<Expr> right;
+
+    UnaryExpr(Operator op, std::unique_ptr<Expr> right);
+    ~UnaryExpr();
+
+    UnaryExpr(const UnaryExpr&) = delete;
+    UnaryExpr& operator=(const UnaryExpr&) = delete;
+    UnaryExpr(UnaryExpr&&) noexcept = default;
+    UnaryExpr& operator=(UnaryExpr&&) noexcept = default;
 };
 
 struct InfixExpr {
     Operator op;
     std::unique_ptr<Expr> left;
     std::unique_ptr<Expr> right;
+
+    InfixExpr(Operator op, std::unique_ptr<Expr> left, std::unique_ptr<Expr> right);
+    ~InfixExpr();
+
+    InfixExpr(const InfixExpr&) = delete;
+    InfixExpr& operator=(const InfixExpr&) = delete;
+    InfixExpr(InfixExpr&&) noexcept = default;
+    InfixExpr& operator=(InfixExpr&&) noexcept = default;
 };
 
 struct FnCallExpr {
     Identifier ident;
     std::vector<std::unique_ptr<Expr>> args;
+
+    FnCallExpr(Identifier ident, std::vector<std::unique_ptr<Expr>> args);
+    ~FnCallExpr();
+
+    FnCallExpr(const FnCallExpr&) = delete;
+    FnCallExpr& operator=(const FnCallExpr&) = delete;
+    FnCallExpr(FnCallExpr&&) noexcept = default;
+    FnCallExpr& operator=(FnCallExpr&&) noexcept = default;
 };
 
 struct IdentExpr {
@@ -44,6 +71,14 @@ using ExprVariant = std::variant<
 
 struct Expr {
     ExprVariant variant;
+
+    explicit Expr(ExprVariant v);
+    ~Expr();
+
+    Expr(const Expr&) = delete;
+    Expr& operator=(const Expr&) = delete;
+    Expr(Expr&&) noexcept = default;
+    Expr& operator=(Expr&&) noexcept = default;
 };
 
 inline std::ostream& operator<<(std::ostream& os, const UnaryExpr& expr) {
@@ -51,7 +86,7 @@ inline std::ostream& operator<<(std::ostream& os, const UnaryExpr& expr) {
 }
 
 inline std::ostream& operator<<(std::ostream& os, const InfixExpr& expr) {
-    return os << "UnaryExpr(op=" << expr.op << ", left=" << *expr.left << ", right=" << *expr.right << ")";
+    return os << "InfixExpr(op=" << expr.op << ", left=" << *expr.left << ", right=" << *expr.right << ")";
 }
 
 inline std::ostream& operator<<(std::ostream& os, const FnCallExpr& expr) {
@@ -59,7 +94,7 @@ inline std::ostream& operator<<(std::ostream& os, const FnCallExpr& expr) {
 
     if(!expr.args.empty()) {
         size_t size = expr.args.size();
-        for(int i=0; i<size; i++) {
+        for(size_t i=0; i<size; i++) {
             os << *expr.args[i];
             if(i != size - 1) os << ", ";
         }
@@ -74,14 +109,10 @@ inline std::ostream& operator<<(std::ostream& os, const IdentExpr& expr) {
 
 inline std::ostream& operator<<(std::ostream& os, const LiteralExpr& expr) {
     return os << expr.value;
-
 }
 
 inline std::ostream& operator<<(std::ostream& os, const ExprVariant& variant) {
-    std::visit([&](auto& expr) {
-        os << expr;
-    }, variant);
-    
+    std::visit([&](const auto& e) { os << e; }, variant);
     return os;
 }
 

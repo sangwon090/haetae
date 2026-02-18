@@ -266,7 +266,7 @@ struct Token {
 
 
 inline std::ostream& operator<<(std::ostream& os, const TokenVariant& variant) {
-    std::visit([&](auto& value) {
+    std::visit([&](const auto& value) {
         os << value;
     }, variant);
 
