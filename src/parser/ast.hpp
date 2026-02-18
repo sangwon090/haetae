@@ -1,10 +1,11 @@
 #pragma once
 
-#include "expr/expr.hpp"
+#include "expr.hpp"
 
 #include <vector>
 
-class AST {
-private:
+struct AST {
+public:
     std::vector<Expr> exprs;
+
 };

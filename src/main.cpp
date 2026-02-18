@@ -29,7 +29,7 @@ int main(int argc, char *argv[]) {
     vector<Token> tokens = lexer.get_tokens();
 
     Parser parser(std::move(tokens));
-    AST ast = parser.get_ast();
-
+    auto opt_ast = parser.get_ast();
+    
     return 0;
 }

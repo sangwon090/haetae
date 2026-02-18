@@ -3,14 +3,29 @@
 #include <string>
 #include <variant>
 
-template<class... Ts> struct overloaded : Ts... { using Ts::operator()...; };
-template<class... Ts> overloaded(Ts...) -> overloaded<Ts...>;
-
 struct Identifier { std::string value; };
-struct Keyword { std::string name; };
-struct Literal { std::string value; };
 
-enum TokenKind {
+enum class Keyword {
+    Let,
+    Fn,
+    Module,
+};
+
+struct AtomLiteral { std::string val; };
+struct IntegerLiteral { int val; };
+struct FloatingLiteral { long double val; };
+struct StringLiteral { std::string val; };
+struct BooleanLiteral { bool val; };
+
+using Literal = std::variant<
+    AtomLiteral,
+    IntegerLiteral,
+    FloatingLiteral,
+    StringLiteral,
+    BooleanLiteral
+>;
+
+enum class TokenKind {
     LParen,             // (
     RParen,             // )
     LSqBr,              // [
@@ -63,7 +78,7 @@ using TokenVariant = std::variant<
 >;
 
 struct Token {
-    TokenVariant kind;
+    TokenVariant variant;
     int start;
     int end;
 };

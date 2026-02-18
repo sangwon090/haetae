@@ -1,4 +1,5 @@
 #include "lexer.hpp"
+#include "token.hpp"
 
 #include <string>
 #include <sstream>
@@ -35,6 +36,7 @@ Token Lexer::read_number() {
             if(!is_float) {
                 is_float = true;
                 buf += ch;
+                this->offset += 1;
             } else {
                 throw std::runtime_error("[Lexer] unexpected dot found while parsing number");
             }
@@ -43,8 +45,8 @@ Token Lexer::read_number() {
         }
     }
 
-    // TODO: literal with arbitary type (not always string)
-    return {Literal{buf}, start, offset};
+    if(is_float) return Token { Literal { FloatingLiteral(std::stold(buf)) }, start, offset };
+    else return Token { Literal { IntegerLiteral(std::stoi(buf)) }, start, offset };
 }
 
 Token Lexer::read_string() {
@@ -59,7 +61,7 @@ Token Lexer::read_string() {
 
         switch(ch) {
             case '"':
-                return {Literal { buf }, start, offset};
+                return {Literal { StringLiteral(buf) }, start, offset};
             
             default:
                 buf += ch;
@@ -84,6 +86,8 @@ Token Lexer::read_ident() {
         offset += 1;
     }
 
+    // TODO: check for keywords
+
     return {Identifier{ buf }, start, offset};
 }
 
@@ -101,7 +105,7 @@ Token Lexer::read_newline() {
 }
 
 bool Lexer::is_continuable(Token token) {
-    auto *kind_ptr = std::get_if<TokenKind>(&token.kind);
+    auto *kind_ptr = std::get_if<TokenKind>(&token.variant);
     if(!kind_ptr) return false;
 
     switch(*kind_ptr) {
@@ -178,8 +182,8 @@ std::vector<Token> Lexer::get_tokens() {
             
             case '#':
                 while(offset < source.length()) {
-                    offset += 1;
                     if(source[offset] == '\n' || source[offset] == '\r') break;
+                    offset += 1;
                 }
                 break;
             
@@ -245,8 +249,10 @@ std::vector<Token> Lexer::get_tokens() {
             
             case '|':
                 if(offset + 1 < source.length() && source[offset + 1] == '>') {
-                    if(auto *kind = std::get_if<TokenKind>(&tokens.back().kind)) {
-                        if(*kind == TokenKind::Newline) tokens.pop_back();
+                    if(!tokens.empty()) {
+                        if(auto *kind = std::get_if<TokenKind>(&tokens.back().variant)) {
+                            if(*kind == TokenKind::Newline) tokens.pop_back();
+                        }
                     }
 
                     tokens.push_back({TokenKind::VBarRArrow, offset, offset + 2});
@@ -266,8 +272,12 @@ std::vector<Token> Lexer::get_tokens() {
                 if(offset + 1 < source.length()) {
                     if(source[offset+1] == '<') { tokens.push_back({TokenKind::LeftShift, offset, offset+2}); offset += 2; }
                     else if(source[offset+1] == '=') { tokens.push_back({TokenKind::LessEqual, offset, offset+2}); offset += 2; }
+                    else {
+                        tokens.push_back({TokenKind::Less, offset, offset + 1});
+                        offset += 1;
+                    }
                 } else {
-                    tokens.push_back({TokenKind::Greater, offset, offset + 1});
+                    tokens.push_back({TokenKind::Less, offset, offset + 1});
                     offset += 1;
                 }
                 break;
@@ -276,6 +286,10 @@ std::vector<Token> Lexer::get_tokens() {
                 if(offset + 1 < source.length()) {
                     if(source[offset+1] == '>') { tokens.push_back({TokenKind::RightShift, offset, offset + 2}); offset += 2; }
                     else if(source[offset+1] == '=') { tokens.push_back({TokenKind::GreaterEqual, offset, offset + 2}); offset += 2; }
+                    else {
+                        tokens.push_back({TokenKind::Greater, offset, offset + 1});
+                        offset += 1;
+                    }
                 } else {
                     tokens.push_back({TokenKind::Greater, offset, offset + 1});
                     offset += 1;
@@ -314,8 +328,10 @@ std::vector<Token> Lexer::get_tokens() {
 
             case '~':
                 if(offset + 1 < source.length() && source[offset + 1] == '>') {
-                    if(auto *kind = std::get_if<TokenKind>(&tokens.back().kind)) {
-                        if(*kind == TokenKind::Newline) tokens.pop_back();
+                    if(!tokens.empty()) {
+                        if(auto *kind = std::get_if<TokenKind>(&tokens.back().variant)) {
+                            if(*kind == TokenKind::Newline) tokens.pop_back();
+                        }
                     }
 
                     tokens.push_back({TokenKind::TildeRArrow, offset, offset + 2});
