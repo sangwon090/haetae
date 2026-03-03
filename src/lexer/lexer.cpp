@@ -12,7 +12,7 @@ const std::map<std::string, Keyword> Lexer::keywords = {
 
 const std::map<std::string, DataType> Lexer::dtypes = {
     {"i32", DataType(Integer(32)) },
-    {"f64", DataType(Floating(32)) }
+    {"f64", DataType(Floating(64)) }
 };
 
 std::string Lexer::load_file(std::ifstream file) {

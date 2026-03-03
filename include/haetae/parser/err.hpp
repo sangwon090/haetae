@@ -11,5 +11,5 @@ public:
 };
 
 inline std::ostream& operator<<(std::ostream& os, const ParserError& err) {
-    return os << "ParserError: " << err.msg << '\n';
+    return os << "ParserError: " << err.msg;
 }

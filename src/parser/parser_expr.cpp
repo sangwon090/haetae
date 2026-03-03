@@ -194,7 +194,9 @@ std::expected<Expr, ParserError> Parser::parse_expr(Precedence prec) {
             auto op = Parser::get_operator(*opt_tok, false);
             if(!op) return std::move(expr_left);
 
-            if(prec >= Parser::get_precedence(*op)) {
+            auto next_prec = get_precedence(*op);
+
+            if(!next_prec || prec >= Parser::get_precedence(*op)) {
                 return std::move(expr_left);
             }
 

@@ -8,7 +8,6 @@ find_package(LLVM REQUIRED CONFIG)
 find_package(MLIR REQUIRED CONFIG)
 
 set(SOURCES
-    src/main.cpp
     src/lexer/lexer.cpp
     src/parser/expr/expr.cpp
     src/parser/parser_expr.cpp
