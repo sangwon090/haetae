@@ -12,10 +12,6 @@ enum class Keyword {
     Let,
     Fn,
     Module,
-
-    // data types
-    i32,
-    f64,
 };
 
 inline std::ostream& operator<<(std::ostream& os, const Identifier& ident) {
@@ -34,12 +30,6 @@ inline std::ostream& operator<<(std::ostream& os, const Keyword& keyword) {
             break;
         case Keyword::Module:
             os << "Module";
-            break;
-        case Keyword::i32:
-            os << "i32";
-            break;
-        case Keyword::f64:
-            os << "f64";
             break;
         default:
             os << "Unknown";

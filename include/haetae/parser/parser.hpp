@@ -44,6 +44,9 @@ private:
     std::optional<Token> next(int n);
     std::expected<Expr, ParserError> parse();
     
+    // Data Type
+    std::expected<DataType, ParserError> parse_dtype(bool is_shape = false);
+
     // Pratt Parser
     std::expected<Expr, ParserError> parse_prefix();
     std::expected<Expr, ParserError> parse_expr(Precedence prec = Precedence::Lowest);

@@ -51,9 +51,7 @@ std::expected<Expr, ParserError> Parser::parse_fn() {
         this->pos += 1;
         token = this->next(0);
     } else { // parse all the args
-        int arg_cnt = 0;
-
-        for(; arg_cnt < MAX_ARGS; arg_cnt++) {
+        while(args.size() < MAX_ARGS) {
             Identifier arg_name;
             DataType arg_dtype;
 
@@ -74,15 +72,13 @@ std::expected<Expr, ParserError> Parser::parse_fn() {
                 token = this->next(0);
             } else return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
 
-            if(!token) return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
-            if(auto *dtype_ptr = std::get_if<DataType>(&token.value().variant)) {
-                arg_dtype = *dtype_ptr;
+            auto dtype = this->parse_dtype();
+            if(!dtype) return std::unexpected(dtype.error());
+            token = this->next(0);
 
-                this->pos += 1;
-                token = this->next(0);
-            } else return std::unexpected(ParserError("[Parser::parse_fn] arg data type is not a data type"));
-
+            arg_dtype = *dtype;
             args.push_back({ arg_name, arg_dtype });
+
 
             if(!token) return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
             if(auto *tok_ptr = std::get_if<TokenKind>(&token.value().variant)) {
@@ -98,7 +94,7 @@ std::expected<Expr, ParserError> Parser::parse_fn() {
 
         }
 
-        if(arg_cnt >= MAX_ARGS) return std::unexpected(ParserError("[Parser::parse_fn] max args exceeded. there might be an infinite loop caused by a parser bug."));
+        if(args.size() >= MAX_ARGS) return std::unexpected(ParserError("[Parser::parse_fn] max args exceeded. there might be an infinite loop caused by a parser bug."));
     }
 
 
@@ -110,16 +106,11 @@ std::expected<Expr, ParserError> Parser::parse_fn() {
         token = this->next(0);
     } else return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
 
-
     // parse return type
-    if(!token) return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
-    if(auto *rtype_ptr = std::get_if<DataType>(&token.value().variant)) {
-        rtype = *rtype_ptr;
-
-        this->pos += 1;
-        token = this->next(0);
-    } else return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));
-
+    auto dtype = this->parse_dtype();
+    if(!dtype) return std::unexpected(dtype.error());
+    rtype = *dtype;
+    token = this->next(0);
 
     // parse TokenKind::LBrace
     if(!token) return std::unexpected(ParserError("[Parser::parse_fn] insufficient tokens"));

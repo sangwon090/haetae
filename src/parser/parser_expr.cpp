@@ -177,7 +177,6 @@ std::expected<Expr, ParserError> Parser::parse_prefix() {
     }, opt_tok->variant);
 }
 
-#include <iostream>
 std::expected<Expr, ParserError> Parser::parse_expr(Precedence prec) {
     auto expr_left = this->parse_prefix();
     if(!expr_left) return std::unexpected(expr_left.error());
