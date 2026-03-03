@@ -1,3 +1,9 @@
-1024
-    |> foo
-    ~> bar
+fn foo(a: i32, b: i32) -> i32 {
+    1024
+        |> foo
+        ~> bar
+
+    2048
+        |> foo
+        ~> bar
+}

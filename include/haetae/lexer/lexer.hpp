@@ -5,6 +5,8 @@
 #include <fstream>
 #include <vector>
 #include <iostream>
+#include <map>
+#include <string>
 
 class Lexer {
 public:
@@ -25,4 +27,7 @@ private:
 
     std::string source;
     int offset;
+
+    static const std::map<std::string, Keyword> keywords;
+    static const std::map<std::string, DataType> dtypes;
 };

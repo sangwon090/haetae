@@ -10,8 +10,11 @@ find_package(MLIR REQUIRED CONFIG)
 set(SOURCES
     src/main.cpp
     src/lexer/lexer.cpp
-    src/parser/expr.cpp
+    src/parser/expr/expr.cpp
+    src/parser/parser_expr.cpp
+    src/parser/parser_fn.cpp
     src/parser/parser.cpp
+    src/irgen/irgen.cpp
 )
 
 add_library(haetae_lib ${SOURCES})

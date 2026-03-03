@@ -1,8 +1,8 @@
 #pragma once
 
-#include "../lexer/token.hpp"
-#include "../utils/overloaded.hpp"
-#include "op.hpp"
+#include "../../lexer/token.hpp"
+#include "../../utils/overloaded.hpp"
+#include "../op.hpp"
 
 #include <memory>
 #include <vector>
@@ -40,6 +40,21 @@ struct InfixExpr {
     InfixExpr& operator=(InfixExpr&&) noexcept = default;
 };
 
+struct FnDefExpr {
+    Identifier name;
+    std::vector<std::tuple<Identifier, DataType>> args;
+    DataType rtype;
+    std::vector<Expr> body;
+
+    FnDefExpr(Identifier name, std::vector<std::tuple<Identifier, DataType>> args, DataType rtype, std::vector<Expr> body);
+    ~FnDefExpr();
+
+    FnDefExpr(const FnDefExpr&) = delete;
+    FnDefExpr& operator=(const FnDefExpr&) = delete;
+    FnDefExpr(FnDefExpr&&) noexcept = default;
+    FnDefExpr& operator=(FnDefExpr&&) noexcept = default;
+};
+
 struct FnCallExpr {
     Identifier ident;
     std::vector<std::unique_ptr<Expr>> args;
@@ -64,6 +79,7 @@ struct LiteralExpr {
 using ExprVariant = std::variant<
     UnaryExpr,
     InfixExpr,
+    FnDefExpr,
     FnCallExpr,
     IdentExpr,
     LiteralExpr
@@ -87,6 +103,31 @@ inline std::ostream& operator<<(std::ostream& os, const UnaryExpr& expr) {
 
 inline std::ostream& operator<<(std::ostream& os, const InfixExpr& expr) {
     return os << "InfixExpr(op=" << expr.op << ", left=" << *expr.left << ", right=" << *expr.right << ")";
+}
+
+inline std::ostream& operator<<(std::ostream& os, const FnDefExpr& expr) {
+    os << "FnDefExpr(name=" << expr.name << ", args=[";
+
+    if(!expr.args.empty()) {
+        size_t size = expr.args.size();
+        for(size_t i=0; i<size; i++) {
+            os << "(" << std::get<0>(expr.args[i]) << ": " << std::get<1>(expr.args[i]) << ")";
+            if(i != size - 1) os << ", ";
+        }
+    }
+
+    os << "], body=[";
+    if(!expr.body.empty()) {
+        size_t size = expr.body.size();
+        for(size_t i=0; i<size; i++) {
+            os << expr.body[i];
+            if(i != size - 1) os << ", ";
+        }
+    }
+
+    os << "], rtype=" << expr.rtype << ")";
+
+    return os;
 }
 
 inline std::ostream& operator<<(std::ostream& os, const FnCallExpr& expr) {
@@ -116,6 +157,3 @@ inline std::ostream& operator<<(std::ostream& os, const ExprVariant& variant) {
     return os;
 }
 
-inline std::ostream& operator<<(std::ostream& os, const Expr& expr) {
-    return os << expr.variant;
-}

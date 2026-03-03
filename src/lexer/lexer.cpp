@@ -6,6 +6,15 @@
 #include <iostream>
 #include <cctype>
 
+const std::map<std::string, Keyword> Lexer::keywords = {
+    {"fn", Keyword::Fn},
+};
+
+const std::map<std::string, DataType> Lexer::dtypes = {
+    {"i32", DataType(Integer(32)) },
+    {"f64", DataType(Floating(32)) }
+};
+
 std::string Lexer::load_file(std::ifstream file) {
     std::string content;
 
@@ -87,8 +96,18 @@ Token Lexer::read_ident() {
     }
 
     // TODO: check for keywords
+    auto keyword = Lexer::keywords.find(buf);
 
-    return {Identifier{ buf }, start, offset};
+    if(keyword != Lexer::keywords.end()) {
+        return { keyword->second, start, offset };
+    }
+    
+    auto dtype = Lexer::dtypes.find(buf);
+    if(dtype != Lexer::dtypes.end()) {
+        return { dtype->second, start, offset };
+    }
+
+    return { Identifier{ buf }, start, offset }; 
 }
 
 Token Lexer::read_newline() {
@@ -359,7 +378,6 @@ std::vector<Token> Lexer::get_tokens() {
 
             default:
                 if((ispunct(ch) && ch != '_') || ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '\f' || ch == '\v' ) {
-                    std::cerr << "[Lexer] unexpected character `" << ch << "` found. ignoring.";
                     offset += 1;
                 } else {
                     tokens.push_back(read_ident());
