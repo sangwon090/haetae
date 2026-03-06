@@ -1,4 +1,4 @@
-fn foo(a: tensor<f64; 8, 8, 8>, b: tensor<f64; 8, 8, 8>) -> tensor<f64; 8, 8, 8> {
+fn foo(a: f64, b: bool) -> tensor<f64; 8, 8, 8> {
     1024
         |> foo
         ~> bar

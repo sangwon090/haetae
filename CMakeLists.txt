@@ -55,9 +55,13 @@ if(ENABLE_FUZZING)
     target_compile_options(fuzz_parser PRIVATE
         -fsanitize=fuzzer,address,undefined
         -fno-omit-frame-pointer
+        -fprofile-instr-generate
+        -fcoverage-mapping
         -g
     )
     target_link_options(fuzz_parser PRIVATE
         -fsanitize=fuzzer,address,undefined
+        -fprofile-instr-generate
+        -fcoverage-mapping
     )
 endif()
