@@ -1,8 +1,9 @@
 #pragma once
 
-#include "../../lexer/token.hpp"
-#include "../../utils/overloaded.hpp"
-#include "../op.hpp"
+#include <haetae/lexer/token.hpp>
+#include <haetae/utils/overloaded.hpp>
+#include <haetae/parser/op.hpp>
+#include <haetae/sema/sema.hpp>
 
 #include <memory>
 #include <vector>
@@ -87,6 +88,7 @@ using ExprVariant = std::variant<
 
 struct Expr {
     ExprVariant variant;
+    std::optional<SemaInfo> sema_info;
 
     explicit Expr(ExprVariant v);
     ~Expr();

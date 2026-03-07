@@ -10,13 +10,13 @@
 
 class Lexer {
 public:
-    Lexer(std::string source) : source(source) {}
-    Lexer(std::ifstream file) : source(load_file(std::move(file))) {}
+    Lexer(std::string&& source) : source(std::move(source)) {}
+    Lexer(std::ifstream&& file) : source(load_file(std::move(file))) {}
 
     std::vector<Token> get_tokens();
 
 private:
-    std::string load_file(std::ifstream file);
+    std::string load_file(std::ifstream&& file);
 
     Token read_number();
     Token read_string();

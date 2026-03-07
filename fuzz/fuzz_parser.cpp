@@ -10,7 +10,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t* data, size_t size) {
     std::string input(reinterpret_cast<const char*>(data), size);
 
     try {
-        Lexer lexer(input);
+        Lexer lexer(std::move(input));
         std::vector<Token> tokens = lexer.get_tokens();
 
         Parser parser(std::move(tokens));

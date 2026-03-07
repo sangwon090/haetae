@@ -17,7 +17,7 @@ const std::map<std::string, DataType> Lexer::dtypes = {
     { "tensor", DataType(Tensor()) }
 };
 
-std::string Lexer::load_file(std::ifstream file) {
+std::string Lexer::load_file(std::ifstream&& file) {
     std::string content;
 
     if(file.is_open()) {
