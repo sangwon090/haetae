@@ -3,7 +3,7 @@
 #include <haetae/lexer/token.hpp>
 #include <haetae/utils/overloaded.hpp>
 #include <haetae/parser/op.hpp>
-#include <haetae/sema/sema.hpp>
+#include <haetae/sema/info.hpp>
 
 #include <memory>
 #include <vector>

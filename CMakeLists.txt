@@ -13,6 +13,7 @@ set(SOURCES
     src/parser/parser_expr.cpp
     src/parser/parser_fn.cpp
     src/parser/parser.cpp
+    src/sema/sema.cpp
     src/irgen/irgen.cpp
 )
 

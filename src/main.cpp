@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
     // semantic analysis
     auto [sema_ast, sema_duration] = time_execution([&]() {
         Sema sema(std::move(*ast));
-        return 0;
+        return sema.analyze();
     });
 
     cout << std::format("Sema took {}μs\n", sema_duration.count()) << '\n';
