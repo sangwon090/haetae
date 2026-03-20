@@ -6,7 +6,22 @@
 #include <variant>
 #include <iostream>
 
-struct Identifier { std::string value; };
+struct Identifier { 
+    std::string value;
+
+    bool operator==(const Identifier& other) const {
+        return this->value == other.value;
+    }
+};
+
+namespace std {
+    template <>
+    struct hash<Identifier> {
+        size_t operator()(const Identifier& ident) const {
+            return std::hash<std::string>()(ident.value);
+        }
+    };
+}
 
 enum class Keyword {
     Let,
