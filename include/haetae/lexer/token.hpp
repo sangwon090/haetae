@@ -59,8 +59,8 @@ inline std::ostream& operator<<(std::ostream& os, const Keyword& keyword) {
 
 
 struct AtomLiteral { std::string value; };
-struct IntegerLiteral { int value; };
-struct FloatingLiteral { long double value; };
+struct IntegerLiteral { int value; NumericType type; };
+struct FloatingLiteral { long double value; NumericType type; };
 struct StringLiteral { std::string value; };
 struct BooleanLiteral { bool value; };
 
@@ -71,6 +71,26 @@ using Literal = std::variant<
     StringLiteral,
     BooleanLiteral
 >;
+
+inline DataType get_dtype_from_literal(const Literal& literal) {
+    return std::visit(overloaded{
+        [](const AtomLiteral& atom) -> DataType {
+            return Atomic{atom.value};
+        },
+        [](const IntegerLiteral& integer) -> DataType {
+            return std::visit([](const auto& n) -> DataType { return n; }, integer.type);
+        },
+        [](const FloatingLiteral& floating) -> DataType {
+            return std::visit([](const auto& n) -> DataType { return n; }, floating.type);
+        },
+        [](const BooleanLiteral&) -> DataType {
+            return Boolean{};
+        },
+        [](const StringLiteral& s) -> DataType {
+            return Atomic{s.value}; // TODO: fix after implementing string type
+        }
+    }, literal);
+}
 
 inline std::ostream& operator<<(std::ostream& os, const AtomLiteral& literal) {
     return os << "Atom(" << literal.value << ")";

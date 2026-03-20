@@ -57,7 +57,7 @@ Token Lexer::read_number() {
     }
 
     if(is_float) return Token { Literal { FloatingLiteral(std::stold(buf)) }, start, offset };
-    else return Token { Literal { IntegerLiteral(std::stoi(buf)) }, start, offset };
+    else return Token { Literal { IntegerLiteral(std::stoi(buf), Integer{32}) }, start, offset }; // TODO: temporary workaround to fix integer size
 }
 
 Token Lexer::read_string() {

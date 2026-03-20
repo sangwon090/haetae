@@ -15,5 +15,6 @@ private:
 public:
     Sema(AST&& ast) : ast(std::move(ast)) { }
 
+    std::expected<DataType, SemaError> check_dtype(Expr* expr, SymbolTable& parent_symbols);
     std::expected<AST, SemaError> analyze_all();
 };

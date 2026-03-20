@@ -1,9 +1,0 @@
-fn foo(a: f64, b: bool) -> tensor<f64; 8, 8, 8> {
-    1024
-        |> foo
-        ~> bar
-
-    2048
-        |> foo
-        ~> bar
-}

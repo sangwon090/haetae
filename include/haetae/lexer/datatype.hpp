@@ -26,12 +26,44 @@ struct Tensor {
 };
 
 using DataType = std::variant<
+    Atomic,
     Integer,
     Floating,
+    BrainFloating,
     Tensor,
     Boolean
 >;
 
+
+inline bool operator==(const Atomic& left, const Atomic& right) {
+    return left.name == right.name; 
+}
+
+inline bool operator==(const Integer& left, const Integer& right) {
+    return left.bits == right.bits;
+}
+
+inline bool operator==(const Floating& left, const Floating& right) {
+    return left.bits == right.bits;   
+}
+
+inline bool operator==(const BrainFloating& left, const BrainFloating& right) {
+    return left.bits == right.bits;
+}
+
+inline bool operator==(const Tensor& left, const Tensor& right) {
+    if(left.dim.size() != right.dim.size()) return false;
+
+    for(int i=0; i<left.dim.size(); i++) {
+        if(left.dim[i] != right.dim[i]) return false;
+    }
+
+    return left.dtype == right.dtype;
+}
+
+inline bool operator==(const Boolean& left, const Boolean& right) {
+    return true;
+}
 
 inline std::ostream& operator<<(std::ostream& os, const Atomic& atomic) {
     return os << "Atomic(" << atomic.name << ")";
