@@ -1,6 +1,7 @@
 #include <haetae/lexer/lexer.hpp>
 #include <haetae/parser/parser.hpp>
 #include <haetae/sema/sema.hpp>
+#include <haetae/irgen/irgen.hpp>
 #include <haetae/utils/timer.hpp>
 
 #include <iostream>
@@ -66,11 +67,19 @@ int main(int argc, char *argv[]) {
 
     if(!sema_ast) throw std::runtime_error(sema_ast.error().toString());
 
-    cout << std::format("Sema took {}μs\n", sema_duration.count()) << '\n';
-    
-    cout << std::format("Parser took {}μs\n", parser_duration.count()) << "AST:\n";
+    cout << std::format("Sema took {}μs\n", sema_duration.count()) << "Analyzed AST:\n";
     for(auto &expr : sema_ast->exprs) cout << expr << '\n';
     cout << "\n";
+
+
+    // IR generation
+    auto [ir, irgen_duration] = time_execution([&]() {
+        IRGen irgen(std::move(*sema_ast));
+        return irgen.generate_ir();
+    });
+
+    cout << std::format("IRGen took {}μs\n", irgen_duration.count()) << "MLIR:\n";
+    cout << ir << '\n';
 
     return 0;
 }

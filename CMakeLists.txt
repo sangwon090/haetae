@@ -29,9 +29,9 @@ target_include_directories(haetae_lib
 target_compile_definitions(haetae_lib PRIVATE ${LLVM_DEFINITIONS})
 
 target_link_libraries(haetae_lib PRIVATE
-    MLIRIR
-    MLIRSupport
-    MLIRParser
+    MLIR
+    MLIR-C
+    LLVM
 )
 
 if(NOT LLVM_ENABLE_RTTI)

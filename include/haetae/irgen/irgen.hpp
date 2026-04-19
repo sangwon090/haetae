@@ -8,5 +8,5 @@ private:
 
 public:
     IRGen(AST ast) : ast(std::move(ast)) {}
-    void generate_ir();
+    std::string generate_ir();
 };

@@ -6,26 +6,25 @@
 #include <mlir/IR/Builders.h>
 #include <mlir/IR/Verifier.h>
 
-#include <mlir/Dialect/Func/IR/FuncOps.h>
-#include <mlir/Dialect/Arith/IR/Arith.h>
-#include <mlir/Dialect/Tensor/IR/Tensor.h>
-#include <mlir/Dialect/Linalg/IR/Linalg.h>
-#include <mlir/Dialect/SCF/IR/SCF.h>
+#include <mlir/InitAllDialects.h>
 
 using namespace mlir;
 
-void IRGen::generate_ir() {
-    MLIRContext ctx;
+// TOOD: std::string is a temporary return type.
+std::string IRGen::generate_ir() {
+    DialectRegistry registry;
+    registerAllDialects(registry);
 
-    ctx.loadDialect<
-        func::FuncDialect,
-        arith::ArithDialect,
-        tensor::TensorDialect,
-        linalg::LinalgDialect,
-        scf::SCFDialect
-    >();
+    MLIRContext ctx(registry);
 
     OpBuilder builder(&ctx);
 
     auto module = ModuleOp::create(builder.getUnknownLoc());
+
+    std::string output;
+    llvm::raw_string_ostream os(output);
+    module.print(os);
+    module.erase();
+
+    return output;
 }
