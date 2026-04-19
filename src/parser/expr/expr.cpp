@@ -21,5 +21,10 @@ FnCallExpr::FnCallExpr(Identifier ident, std::vector<std::unique_ptr<Expr>> args
 FnCallExpr::~FnCallExpr() = default;
 
 std::ostream& operator<<(std::ostream& os, const Expr& expr) {
-    return os << expr.variant;
+    os << "Expr(variant=" << expr.variant << ", sema_info=";
+    
+    if(expr.sema_info.has_value()) os << *expr.sema_info;
+    else os << "null";
+
+    return os << ")";
 }

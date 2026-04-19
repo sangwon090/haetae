@@ -56,6 +56,8 @@ std::expected<DataType, SemaError> Sema::check_dtype(Expr* expr, SymbolTable& pa
     }, expr->variant);
 
     if(!ret) return std::unexpected(ret.error());
+    expr->sema_info = SemaInfo { *ret };
+
     return *ret;
 }
 

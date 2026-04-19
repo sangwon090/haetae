@@ -68,5 +68,9 @@ int main(int argc, char *argv[]) {
 
     cout << std::format("Sema took {}μs\n", sema_duration.count()) << '\n';
     
+    cout << std::format("Parser took {}μs\n", parser_duration.count()) << "AST:\n";
+    for(auto &expr : sema_ast->exprs) cout << expr << '\n';
+    cout << "\n";
+
     return 0;
 }
