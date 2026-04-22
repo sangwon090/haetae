@@ -31,7 +31,7 @@ public:
     
     mlir::Type convert_type(const DataType &dtype);
 
-    std::expected<void, IRGenError> convert_expr(Expr &expr);
+    std::expected<mlir::Value, IRGenError> convert_expr(Expr &expr);
     std::expected<void, IRGenError> convert_fndef(FnDefExpr &fndef);
     std::expected<void, IRGenError> convert_all();
     std::string generate_ir();
