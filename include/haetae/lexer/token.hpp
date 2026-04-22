@@ -59,8 +59,8 @@ inline std::ostream& operator<<(std::ostream& os, const Keyword& keyword) {
 
 
 struct AtomLiteral { std::string value; };
-struct IntegerLiteral { int value; NumericType type; };
-struct FloatingLiteral { long double value; NumericType type; };
+struct IntegerLiteral { int value; Integer type; };
+struct FloatingLiteral { long double value; Floating type; };
 struct StringLiteral { std::string value; };
 struct BooleanLiteral { bool value; };
 
@@ -78,10 +78,10 @@ inline DataType get_dtype_from_literal(const Literal& literal) {
             return Atomic{atom.value};
         },
         [](const IntegerLiteral& integer) -> DataType {
-            return std::visit([](const auto& n) -> DataType { return n; }, integer.type);
+            return integer.type;
         },
         [](const FloatingLiteral& floating) -> DataType {
-            return std::visit([](const auto& n) -> DataType { return n; }, floating.type);
+            return floating.type;
         },
         [](const BooleanLiteral&) -> DataType {
             return Boolean{};

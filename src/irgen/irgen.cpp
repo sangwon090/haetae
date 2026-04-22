@@ -3,68 +3,145 @@
 
 #include <variant>
 
-using namespace mlir;
 
 mlir::Type IRGen::convert_type(const DataType &dtype) {
     auto ret = std::visit(overloaded {
         [this](const Atomic &atomic) {
-            // TODO: implement atomic
-           return Type { this->builder.getNoneType() };
+            // TODO: implement atomic, or remove this type from the spec?
+            return mlir::Type { this->builder.getNoneType() };
         },
         [this](const Integer &integer) {
-            return Type { this->builder.getIntegerType(integer.bits) };
+            return mlir::Type { this->builder.getIntegerType(integer.bits) };
         },
         [this](const Floating &floating) {
-            if(floating.bits == 32) return Type { this->builder.getF32Type() };
-            else if(floating.bits == 64) return Type { this->builder.getF64Type() };
-            else return Type { this->builder.getF64Type() };
+            if(floating.bits == 32) return mlir::Type { this->builder.getF32Type() };
+            else if(floating.bits == 64) return mlir::Type { this->builder.getF64Type() };
+            else return mlir::Type { this->builder.getF64Type() };
         },
         [this](const BrainFloating &bfloating) {
             // TODO: support bfloat type
-            if(bfloating.bits == 32) return Type { this->builder.getF32Type() };
-            else if(bfloating.bits == 64) return Type { this->builder.getF64Type() };
-            else return Type { this->builder.getF64Type() };
+            if(bfloating.bits == 32) return mlir::Type { this->builder.getF32Type() };
+            else if(bfloating.bits == 64) return mlir::Type { this->builder.getF64Type() };
+            else return mlir::Type { this->builder.getF64Type() };
         },
         [this](const Tensor &tensor) {
-            // TODO: implement tensor
-           return Type { this->builder.getNoneType() };
+            llvm::SmallVector<int64_t> shape(tensor.dim.begin(), tensor.dim.end());
+            DataType dtype = std::visit([](const auto &ntype) {
+                return DataType(ntype);
+            }, tensor.dtype);
+
+            return mlir::Type { mlir::RankedTensorType::get(shape, convert_type(dtype)) };
         },
         [this](const Boolean &boolean) {
-            return Type { this->builder.getI1Type() };
+            return mlir::Type { this->builder.getI1Type() };
         }
     }, dtype);
 
     return ret;
 }
 
-std::expected<void, IRGenError> IRGen::convert_expr(Expr &expr) {
+mlir::Value IRGen::convert_literal(const Literal &literal) {
     return std::visit(overloaded {
-        [&](const FnDefExpr& e) -> std::expected<void, IRGenError> {
+        [this](const AtomLiteral &atomic) -> mlir::Value {
+            // TODO: implement atomic, or remove this type from the spec?
+            auto type = builder.getIntegerType(32);
+            auto attr = builder.getIntegerAttr(type, 0);
+            return builder.create<mlir::arith::ConstantOp>(
+                builder.getUnknownLoc(), attr
+            ).getResult();
+        },
+        [this](const IntegerLiteral &integer) -> mlir::Value {
+            auto type = builder.getIntegerType(integer.type.bits);
+            auto attr = builder.getIntegerAttr(type, integer.value);
+            return builder.create<mlir::arith::ConstantOp>(
+                builder.getUnknownLoc(), attr
+            ).getResult();
+        },
+        [this](const FloatingLiteral &floating) -> mlir::Value {
+            auto type = (floating.type.bits == 32) ? builder.getF32Type() : builder.getF64Type();
+            auto attr = builder.getFloatAttr(type, floating.value);
+            return builder.create<mlir::arith::ConstantOp>(
+                builder.getUnknownLoc(), attr
+            ).getResult();
+        },
+        [this](const BooleanLiteral &boolean) -> mlir::Value {
+            auto type = builder.getI1Type();
+            auto attr = builder.getIntegerAttr(type, boolean.value);
+            return builder.create<mlir::arith::ConstantOp>(
+                builder.getUnknownLoc(), attr
+            ).getResult();
+        },
+        [this](const StringLiteral &s) -> mlir::Value {
+            // TODO: implement string
+            auto type = builder.getIntegerType(32);
+            auto attr = builder.getIntegerAttr(type, 0);
+            return builder.create<mlir::arith::ConstantOp>(
+                builder.getUnknownLoc(), attr
+            ).getResult();
+        }
+    }, literal);
+}
+
+std::expected<mlir::Value, IRGenError> IRGen::convert_expr(Expr &expr) {
+    auto ret = std::visit(overloaded {
+        [&](const UnaryExpr& e) -> std::expected<mlir::Value, IRGenError> {
+            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+        },
+        [&](const InfixExpr& e) -> std::expected<mlir::Value, IRGenError> {
+            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+        },
+        [&](const FnDefExpr& e) -> std::expected<mlir::Value, IRGenError> {
             return std::unexpected(IRGenError("[IRGen::convert_expr] nested fn def is undefined behavior."));
         },
-        [&](const auto& others) -> std::expected<void, IRGenError> {
-            return {};
-        }
+        [&](const FnCallExpr& e) -> std::expected<mlir::Value, IRGenError> {
+            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+        },
+        [&](const IdentExpr& e) -> std::expected<mlir::Value, IRGenError> {
+            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+        },
+        [&](const LiteralExpr& e) -> std::expected<mlir::Value, IRGenError> {
+            return convert_literal(e.value);
+        },
     }, expr.variant);
+
+    if(!ret) return std::unexpected(ret.error());
+    return *ret;
 }
 
 std::expected<void, IRGenError> IRGen::convert_fndef(FnDefExpr &fndef) {
-    llvm::SmallVector<Type> arg_types;
+    std::unordered_map<std::string, mlir::Value> values;
+    llvm::SmallVector<mlir::Type> arg_types;
 
     for(auto &[name, dtype] : fndef.args) {
         arg_types.push_back(convert_type(dtype));
     }
 
-    Type ret_type = convert_type(fndef.rtype);
+    mlir::Type ret_type = convert_type(fndef.rtype);
     auto fn_type = builder.getFunctionType(arg_types, { ret_type });
 
     builder.setInsertionPointToEnd(module->getBody());
-    auto fn = builder.create<func::FuncOp>(
+    auto fn = builder.create<mlir::func::FuncOp>(
         builder.getUnknownLoc(),
         fndef.name.value,
         fn_type
     );
 
+    auto &entry_block = *fn.addEntryBlock();
+    builder.setInsertionPointToStart(&entry_block);
+
+    for(auto [arg_decl, block_arg] : llvm::zip(fndef.args, entry_block.getArguments())) {
+        values[std::get<0>(arg_decl).value] = block_arg;
+    }
+
+    mlir::Value last_val;
+    for(auto &expr : fndef.body) {
+        auto val = convert_expr(expr);
+        // FIXME: temporary workaround for incomplete values returned by convert_expr
+        if(!val) continue; //return std::unexpected(val.error());
+        last_val = *val;
+    }
+
+    builder.create<mlir::func::ReturnOp>(builder.getUnknownLoc(), last_val);
 
     return {};
 }
@@ -88,16 +165,16 @@ std::expected<void, IRGenError> IRGen::convert_all() {
 // TOOD: std::string is a temporary return type.
 std::string IRGen::generate_ir() {
     this->ctx.loadDialect<
-        func::FuncDialect,
-        arith::ArithDialect,
-        tensor::TensorDialect,
-        linalg::LinalgDialect,
-        scf::SCFDialect,
-        affine::AffineDialect,
-        memref::MemRefDialect
+        mlir::func::FuncDialect,
+        mlir::arith::ArithDialect,
+        mlir::tensor::TensorDialect,
+        mlir::linalg::LinalgDialect,
+        mlir::scf::SCFDialect,
+        mlir::affine::AffineDialect,
+        mlir::memref::MemRefDialect
     >();
 
-    this->module = ModuleOp::create(builder.getUnknownLoc());
+    this->module = mlir::ModuleOp::create(builder.getUnknownLoc());
     this->convert_all();
 
     std::string output;

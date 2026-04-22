@@ -30,6 +30,7 @@ public:
     IRGen(AST ast) : ast(std::move(ast)), builder(&ctx) {}
     
     mlir::Type convert_type(const DataType &dtype);
+    mlir::Value convert_literal(const Literal &literal);
 
     std::expected<mlir::Value, IRGenError> convert_expr(Expr &expr);
     std::expected<void, IRGenError> convert_fndef(FnDefExpr &fndef);
