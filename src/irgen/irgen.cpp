@@ -1,6 +1,8 @@
 #include <haetae/irgen/irgen.hpp>
 #include <haetae/utils/overloaded.hpp>
 
+#include <llvm/ADT/TypeSwitch.h>
+
 #include <variant>
 
 
@@ -82,16 +84,65 @@ mlir::Value IRGen::convert_literal(const Literal &literal) {
     }, literal);
 }
 
+mlir::Value IRGen::convert_unary_op(Operator op, mlir::Value operand) {
+    assert(op == Operator::UnaryPlus || op == Operator::UnaryMinus || op == Operator::BitwiseNot);
+
+    switch(op) {
+        case Operator::UnaryPlus:
+            return operand;
+        case Operator::UnaryMinus:
+            return mlir::TypeSwitch<mlir::Type, mlir::Value>(operand.getType())
+                .Case<mlir::FloatType>([&](auto t) -> mlir::Value {
+                    return builder.create<mlir::arith::NegFOp>(builder.getUnknownLoc(), operand).getResult();
+                })
+                .Case<mlir::TensorType>([&](auto t) -> mlir::Value {
+                    return builder.create<mlir::arith::NegFOp>(builder.getUnknownLoc(), operand).getResult();
+                })
+                .Case<mlir::IntegerType>([&](auto t) -> mlir::Value {
+                    auto zero = builder.create<mlir::arith::ConstantOp>(
+                        builder.getUnknownLoc(), builder.getIntegerAttr(t, 0)
+                    );
+
+                    return builder.create<mlir::arith::SubIOp>(builder.getUnknownLoc(), zero, operand).getResult();
+                })
+                .Default([&](mlir::Type t) -> mlir::Value {
+                    assert(false && "unsupported type for unary minus op");
+                    return {};
+                });
+        case Operator::BitwiseNot:
+            return mlir::TypeSwitch<mlir::Type, mlir::Value>(operand.getType())
+                .Case<mlir::IntegerType>([&](auto t) -> mlir::Value {
+                    auto attr = builder.create<mlir::arith::ConstantOp>(
+                        builder.getUnknownLoc(), builder.getIntegerAttr(t, -1)
+                    ).getResult();
+
+                    return builder.create<mlir::arith::XOrIOp>(builder.getUnknownLoc(), operand, attr);
+                })
+                .Default([&](mlir::Type t) -> mlir::Value {
+                    // TODO: gracefully return error instead of failing this assertion.
+                    assert(false && "unsupported type for unary bitwise not op");
+                    return {};
+                });
+            break;
+    }
+}
+
+mlir::Value IRGen::convert_infix_op(Operator op, mlir::Value left, mlir::Value right) {
+
+}
+
 std::expected<mlir::Value, IRGenError> IRGen::convert_expr(Expr &expr) {
     auto ret = std::visit(overloaded {
         [&](const UnaryExpr& e) -> std::expected<mlir::Value, IRGenError> {
-            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+            auto right = convert_expr(*e.right);
+            if(!right) return std::unexpected(IRGenError("[IRGen::convert_expr] cannot evaluate unary expr"));
+            return convert_unary_op(e.op, *right);
         },
         [&](const InfixExpr& e) -> std::expected<mlir::Value, IRGenError> {
             return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
         },
         [&](const FnDefExpr& e) -> std::expected<mlir::Value, IRGenError> {
-            return std::unexpected(IRGenError("[IRGen::convert_expr] nested fn def is undefined behavior."));
+            return std::unexpected(IRGenError("[IRGen::convert_expr] nested function definition is undefined behavior."));
         },
         [&](const FnCallExpr& e) -> std::expected<mlir::Value, IRGenError> {
             return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));

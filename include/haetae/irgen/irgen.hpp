@@ -32,6 +32,9 @@ public:
     mlir::Type convert_type(const DataType &dtype);
     mlir::Value convert_literal(const Literal &literal);
 
+    mlir::Value convert_unary_op(Operator op, mlir::Value operand);
+    mlir::Value convert_infix_op(Operator op, mlir::Value left, mlir::Value right);
+
     std::expected<mlir::Value, IRGenError> convert_expr(Expr &expr);
     std::expected<void, IRGenError> convert_fndef(FnDefExpr &fndef);
     std::expected<void, IRGenError> convert_all();
