@@ -128,18 +128,75 @@ mlir::Value IRGen::convert_unary_op(Operator op, mlir::Value operand) {
 }
 
 mlir::Value IRGen::convert_infix_op(Operator op, mlir::Value left, mlir::Value right) {
+    assert(op != Operator::UnaryPlus && op != Operator::UnaryMinus && op != Operator::BitwiseNot);
 
+    switch(op) {
+        case Operator::BitwiseAnd:
+        case Operator::BitwiseOr:
+        case Operator::BitwiseXor:
+            // TODO: make sure that left and right are integer
+            return convert_integer_op(op, left, right);
+        
+        case Operator::Plus:
+        case Operator::Minus:
+        case Operator::Multiply:
+        case Operator::Modulo:
+            // TODO: make sure that left and right are numeric
+            return convert_numeric_op(op, left, right);
+        
+        case Operator::Equal:
+        case Operator::NotEqual:
+        case Operator::Less:
+        case Operator::LessEqual:
+        case Operator::Greater:
+        case Operator::GreaterEqual:
+            // TODO: make sure that left and right are numeric
+            return convert_comparison_op(op, left, right);
+        
+        case Operator::PipelineDevice:
+        case Operator::PipelineHost:
+        case Operator::FnCall:
+            // TODO: handle pipelines and fncall
+            // maybe make pipeline into vector instead of using pointers?
+            return { };
+    }
+}
+
+mlir::Value IRGen::convert_integer_op(Operator op, mlir::Value left, mlir::Value right) {
+    assert(op == Operator::BitwiseAnd || op == Operator::BitwiseOr || op == Operator::BitwiseXor);
+
+    return { };
+}
+
+mlir::Value IRGen::convert_numeric_op(Operator op, mlir::Value left, mlir::Value right) {
+    assert(op == Operator::Plus || op == Operator::Minus || op == Operator::Multiply || op == Operator::Modulo);
+
+    return { };
+}
+
+mlir::Value IRGen::convert_comparison_op(Operator op, mlir::Value left, mlir::Value right) {
+    assert(op == Operator::Equal || op == Operator::NotEqual || op == Operator::Less || \
+        op == Operator::LessEqual || op == Operator::Greater || op == Operator::GreaterEqual);
+    
+    return { };
 }
 
 std::expected<mlir::Value, IRGenError> IRGen::convert_expr(Expr &expr) {
     auto ret = std::visit(overloaded {
         [&](const UnaryExpr& e) -> std::expected<mlir::Value, IRGenError> {
             auto right = convert_expr(*e.right);
+
             if(!right) return std::unexpected(IRGenError("[IRGen::convert_expr] cannot evaluate unary expr"));
             return convert_unary_op(e.op, *right);
         },
         [&](const InfixExpr& e) -> std::expected<mlir::Value, IRGenError> {
-            return std::unexpected(IRGenError("[IRGen::convert_expr] unimplemented!"));
+            auto left = convert_expr(*e.left);
+            auto right = convert_expr(*e.right);
+
+            if(!left) return std::unexpected(IRGenError("[IRGen::convert_expr] cannot evualuate left expr"));
+            if(!right) return std::unexpected(IRGenError("[IRGen::convert_expr] cannot evualuate right expr"));
+
+            return convert_infix_op(e.op, *left, *right);
         },
         [&](const FnDefExpr& e) -> std::expected<mlir::Value, IRGenError> {
             return std::unexpected(IRGenError("[IRGen::convert_expr] nested function definition is undefined behavior."));

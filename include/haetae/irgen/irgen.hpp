@@ -34,6 +34,10 @@ public:
 
     mlir::Value convert_unary_op(Operator op, mlir::Value operand);
     mlir::Value convert_infix_op(Operator op, mlir::Value left, mlir::Value right);
+    mlir::Value convert_integer_op(Operator op, mlir::Value left, mlir::Value right);
+    mlir::Value convert_numeric_op(Operator op, mlir::Value left, mlir::Value right);
+    mlir::Value convert_comparison_op(Operator op, mlir::Value left, mlir::Value right);
+    
 
     std::expected<mlir::Value, IRGenError> convert_expr(Expr &expr);
     std::expected<void, IRGenError> convert_fndef(FnDefExpr &fndef);
