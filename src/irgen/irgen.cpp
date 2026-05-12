@@ -134,13 +134,19 @@ mlir::Value IRGen::convert_infix_op(Operator op, mlir::Value left, mlir::Value r
         case Operator::BitwiseAnd:
         case Operator::BitwiseOr:
         case Operator::BitwiseXor:
-            // TODO: make sure that left and right are integer
+            if(!mlir::isa<mlir::IntegerType>(left.getType()) || !mlir::isa<mlir::IntegerType>(right.getType())) {
+                // TODO: return error instead of using assertion
+                assert(false && "unsupported type for bitwise ops");
+            }
+
             return convert_integer_op(op, left, right);
         
         case Operator::Plus:
         case Operator::Minus:
         case Operator::Multiply:
         case Operator::Modulo:
+            // TODO: return error instead of using assertion
+
             // TODO: make sure that left and right are numeric
             return convert_numeric_op(op, left, right);
         
@@ -150,6 +156,7 @@ mlir::Value IRGen::convert_infix_op(Operator op, mlir::Value left, mlir::Value r
         case Operator::LessEqual:
         case Operator::Greater:
         case Operator::GreaterEqual:
+            // TODO: return error instead of using assertion
             // TODO: make sure that left and right are numeric
             return convert_comparison_op(op, left, right);
         
@@ -164,8 +171,15 @@ mlir::Value IRGen::convert_infix_op(Operator op, mlir::Value left, mlir::Value r
 
 mlir::Value IRGen::convert_integer_op(Operator op, mlir::Value left, mlir::Value right) {
     assert(op == Operator::BitwiseAnd || op == Operator::BitwiseOr || op == Operator::BitwiseXor);
-
-    return { };
+    
+    switch(op) {
+        case Operator::BitwiseAnd:
+            return builder.create<mlir::arith::AndIOp>(builder.getUnknownLoc(), left, right);
+        case Operator::BitwiseOr:
+            return builder.create<mlir::arith::OrIOp>(builder.getUnknownLoc(), left, right);
+        case Operator::BitwiseXor:
+            return builder.create<mlir::arith::XOrIOp>(builder.getUnknownLoc(), left, right);
+    }
 }
 
 mlir::Value IRGen::convert_numeric_op(Operator op, mlir::Value left, mlir::Value right) {
@@ -178,7 +192,42 @@ mlir::Value IRGen::convert_comparison_op(Operator op, mlir::Value left, mlir::Va
     assert(op == Operator::Equal || op == Operator::NotEqual || op == Operator::Less || \
         op == Operator::LessEqual || op == Operator::Greater || op == Operator::GreaterEqual);
     
-    return { };
+    assert(left.getType() == right.getType());
+
+    return mlir::TypeSwitch<mlir::Type, mlir::Value>(left.getType())
+        .Case<mlir::IntegerType>([&](auto t) -> mlir::Value {
+            auto pred = [&]() -> mlir::arith::CmpIPredicate {
+                switch(op) {
+                        case Operator::Equal:        return mlir::arith::CmpIPredicate::eq;
+                        case Operator::NotEqual:     return mlir::arith::CmpIPredicate::ne;
+                        case Operator::Less:         return mlir::arith::CmpIPredicate::slt;
+                        case Operator::LessEqual:    return mlir::arith::CmpIPredicate::sle;
+                        case Operator::Greater:      return mlir::arith::CmpIPredicate::sgt;
+                        case Operator::GreaterEqual: return mlir::arith::CmpIPredicate::sge;
+                    }
+            }();
+
+            return builder.create<mlir::arith::CmpIOp>(builder.getUnknownLoc(), pred, left, right);
+        })
+        .Case<mlir::FloatType>([&](auto t) -> mlir::Value {
+            auto pred = [&]() -> mlir::arith::CmpFPredicate {
+                switch(op) {
+                    case Operator::Equal:        return mlir::arith::CmpFPredicate::OEQ;
+                    case Operator::NotEqual:     return mlir::arith::CmpFPredicate::ONE;
+                    case Operator::Less:         return mlir::arith::CmpFPredicate::OLT;
+                    case Operator::LessEqual:    return mlir::arith::CmpFPredicate::OLE;
+                    case Operator::Greater:      return mlir::arith::CmpFPredicate::OGT;
+                    case Operator::GreaterEqual: return mlir::arith::CmpFPredicate::OGE;
+                }
+            }();
+
+            return builder.create<mlir::arith::CmpFOp>(builder.getUnknownLoc(), pred, left, right);
+        })
+        .Default([&](mlir::Type t) -> mlir::Value {
+            // TODO: gracefully return error instead of failing this assertion.
+            assert(false && "unsupported type for unary bitwise not op");
+            return {};
+        });
 }
 
 std::expected<mlir::Value, IRGenError> IRGen::convert_expr(Expr &expr) {
